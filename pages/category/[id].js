@@ -22,6 +22,11 @@ export default function CategoryPage() {
   const { data: emailData, isLoading, refetch } = useEmails(id, page, 20);
   const bulkDelete = useBulkDeleteEmails();
   const bulkUnsubscribe = useBulkUnsubscribe();
+  
+  // Extract emails and pagination from the response
+  const emails = emailData?.emails || [];
+  const totalCount = emailData?.pagination?.total || 0;
+  const totalPages = emailData?.pagination?.totalPages || 1;
 
   const category = categories?.find(cat => cat.id === id);
 
@@ -34,10 +39,10 @@ export default function CategoryPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedEmails.length === emailData?.emails?.length) {
+    if (selectedEmails.length === emails.length) {
       setSelectedEmails([]);
     } else {
-      setSelectedEmails(emailData?.emails?.map(email => email.id) || []);
+      setSelectedEmails(emails.map(email => email.id) || []);
     }
   };
 
@@ -69,7 +74,7 @@ export default function CategoryPage() {
     refetch();
   };
 
-  const filteredEmails = emailData?.emails?.filter(email => {
+  const filteredEmails = emails.filter(email => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -77,7 +82,7 @@ export default function CategoryPage() {
       email.sender?.toLowerCase().includes(query) ||
       email.ai_summary?.toLowerCase().includes(query)
     );
-  }) || [];
+  });
 
   if (isLoading) {
     return (
@@ -142,7 +147,7 @@ export default function CategoryPage() {
                   {category.name}
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  {emailData?.totalCount || 0} emails
+                  {totalCount} emails
                 </p>
                 <p className="text-sm text-gray-500 mt-2">
                   {category.description}
@@ -256,10 +261,10 @@ export default function CategoryPage() {
               selectedEmails={selectedEmails}
               onSelectEmail={handleSelectEmail}
               onSelectAll={handleSelectAll}
-              totalCount={searchQuery ? filteredEmails.length : (emailData?.totalCount || 0)}
+              totalCount={searchQuery ? filteredEmails.length : totalCount}
               page={page}
               onPageChange={setPage}
-              totalPages={emailData?.totalPages || 1}
+              totalPages={totalPages}
               searchQuery={searchQuery}
             />
           </motion.div>
