@@ -1,1 +1,287 @@
- 
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { motion } from 'framer-motion';
+import Head from 'next/head';
+import DashboardLayout from '../../components/Layout/DashboardLayout';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import EmailList from '../../components/EmailList';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { ArrowLeft, Trash2, Zap, Search, Filter, RefreshCw } from 'lucide-react';
+import { useEmails, useBulkDeleteEmails, useBulkUnsubscribe } from '../../hooks/useEmails';
+import { useCategories } from '../../hooks/useCategories';
+
+export default function CategoryPage() {
+  const router = useRouter();
+  const { id } = router.query;
+  const [selectedEmails, setSelectedEmails] = useState([]);
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+
+  const { data: categories } = useCategories();
+  const { data: emailData, isLoading, refetch } = useEmails(id, page, 20);
+  const bulkDelete = useBulkDeleteEmails();
+  const bulkUnsubscribe = useBulkUnsubscribe();
+
+  const category = categories?.find(cat => cat.id === id);
+
+  const handleSelectEmail = (emailId) => {
+    setSelectedEmails(prev =>
+      prev.includes(emailId)
+        ? prev.filter(id => id !== emailId)
+        : [...prev, emailId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedEmails.length === emailData?.emails?.length) {
+      setSelectedEmails([]);
+    } else {
+      setSelectedEmails(emailData?.emails?.map(email => email.id) || []);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedEmails.length === 0) return;
+    if (!confirm(`Delete ${selectedEmails.length} selected emails?`)) return;
+    
+    try {
+      await bulkDelete.mutateAsync(selectedEmails);
+      setSelectedEmails([]);
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleUnsubscribeSelected = async () => {
+    if (selectedEmails.length === 0) return;
+    if (!confirm(`Attempt to unsubscribe from ${selectedEmails.length} selected emails? This will try to automatically unsubscribe you from these senders.`)) return;
+    
+    try {
+      await bulkUnsubscribe.mutateAsync(selectedEmails);
+      setSelectedEmails([]);
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  const filteredEmails = emailData?.emails?.filter(email => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      email.subject?.toLowerCase().includes(query) ||
+      email.sender?.toLowerCase().includes(query) ||
+      email.ai_summary?.toLowerCase().includes(query)
+    );
+  }) || [];
+
+  if (isLoading) {
+    return (
+      <ProtectedRoute>
+        <DashboardLayout>
+          <div className="flex justify-center items-center h-64">
+            <LoadingSpinner size="lg" />
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (!category) {
+    return (
+      <ProtectedRoute>
+        <DashboardLayout>
+          <div className="p-6">
+            <div className="text-center py-12">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Category Not Found</h1>
+              <p className="text-gray-600 mb-6">The category you're looking for doesn't exist.</p>
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="btn-primary"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  return (
+    <ProtectedRoute>
+      <Head>
+        <title>{category?.name || 'Category'} - AI Email Sorter</title>
+        <meta name="description" content={`View and manage emails in the ${category?.name} category`} />
+      </Head>
+      
+      <DashboardLayout>
+        <div className="p-6">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="flex items-center text-primary-600 hover:text-primary-700 mb-4 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back to Dashboard
+            </button>
+            
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {category.name}
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  {emailData?.totalCount || 0} emails
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  {category.description}
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowSearch(!showSearch)}
+                  className={`btn-secondary ${showSearch ? 'bg-primary-50 border-primary-200 text-primary-700' : ''}`}
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Search
+                </button>
+                
+                <button
+                  onClick={handleRefresh}
+                  className="btn-secondary"
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            {/* Search bar */}
+            {showSearch && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4"
+              >
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search emails by subject, sender, or summary..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="input-field pl-10"
+                    autoFocus
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Bulk actions */}
+            {selectedEmails.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mt-4 p-4 bg-primary-50 border border-primary-200 rounded-lg"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-primary-900">
+                      {selectedEmails.length} email{selectedEmails.length !== 1 ? 's' : ''} selected
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={handleDeleteSelected}
+                      disabled={bulkDelete.isLoading}
+                      className="btn-secondary text-red-600 hover:bg-red-50 border-red-200"
+                    >
+                      {bulkDelete.isLoading ? (
+                        <LoadingSpinner size="sm" className="mr-2" />
+                      ) : (
+                        <Trash2 className="h-4 w-4 mr-2" />
+                      )}
+                      Delete
+                    </button>
+                    
+                    <button
+                      onClick={handleUnsubscribeSelected}
+                      disabled={bulkUnsubscribe.isLoading}
+                      className="btn-secondary text-orange-600 hover:bg-orange-50 border-orange-200"
+                    >
+                      {bulkUnsubscribe.isLoading ? (
+                        <LoadingSpinner size="sm" className="mr-2" />
+                      ) : (
+                        <Zap className="h-4 w-4 mr-2" />
+                      )}
+                      Unsubscribe
+                    </button>
+                    
+                    <button
+                      onClick={() => setSelectedEmails([])}
+                      className="btn-secondary"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+
+          {/* Email list */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <EmailList
+              emails={filteredEmails}
+              selectedEmails={selectedEmails}
+              onSelectEmail={handleSelectEmail}
+              onSelectAll={handleSelectAll}
+              totalCount={searchQuery ? filteredEmails.length : (emailData?.totalCount || 0)}
+              page={page}
+              onPageChange={setPage}
+              totalPages={emailData?.totalPages || 1}
+              searchQuery={searchQuery}
+            />
+          </motion.div>
+
+          {/* Search results info */}
+          {searchQuery && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-4 text-center text-sm text-gray-600"
+            >
+              {filteredEmails.length === 0 ? (
+                <p>No emails found matching "{searchQuery}"</p>
+              ) : (
+                <p>
+                  Showing {filteredEmails.length} email{filteredEmails.length !== 1 ? 's' : ''} matching "{searchQuery}"
+                </p>
+              )}
+            </motion.div>
+          )}
+        </div>
+      </DashboardLayout>
+    </ProtectedRoute>
+  );
+}
