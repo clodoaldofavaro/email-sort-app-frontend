@@ -6,9 +6,10 @@ import DashboardLayout from '../../components/Layout/DashboardLayout';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import EmailList from '../../components/EmailList';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { ArrowLeft, Trash2, Zap, Search, Filter, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Trash2, Zap, Search, Filter, RefreshCw, Mail } from 'lucide-react';
 import { useEmails, useBulkDeleteEmails, useBulkUnsubscribe } from '../../hooks/useEmails';
 import { useCategories } from '../../hooks/useCategories';
+import { useAccounts } from '../../hooks/useAccounts';
 
 export default function CategoryPage() {
   const router = useRouter();
@@ -17,9 +18,11 @@ export default function CategoryPage() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
 
   const { data: categories } = useCategories();
-  const { data: emailData, isLoading, refetch } = useEmails(id, page, 20);
+  const { data: accounts = [] } = useAccounts();
+  const { data: emailData, isLoading, refetch } = useEmails(id, page, 20, selectedAccountId);
   const bulkDelete = useBulkDeleteEmails();
   const bulkUnsubscribe = useBulkUnsubscribe();
   
@@ -146,9 +149,16 @@ export default function CategoryPage() {
                 <h1 className="text-3xl font-bold text-gray-900">
                   {category.name}
                 </h1>
-                <p className="text-gray-600 mt-1">
-                  {totalCount} emails
-                </p>
+                <div className="flex items-center gap-4 mt-1">
+                  <p className="text-gray-600">
+                    {totalCount} emails
+                  </p>
+                  {selectedAccountId && (
+                    <span className="text-sm text-primary-600 bg-primary-50 px-2 py-1 rounded-md">
+                      Filtered by: {accounts.find(a => a.id === parseInt(selectedAccountId))?.email}
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500 mt-2">
                   {category.description}
                 </p>
@@ -156,6 +166,26 @@ export default function CategoryPage() {
 
               {/* Action buttons */}
               <div className="flex flex-wrap gap-2">
+                {/* Account filter dropdown */}
+                <div className="relative">
+                  <select
+                    value={selectedAccountId || ''}
+                    onChange={(e) => {
+                      setSelectedAccountId(e.target.value || null);
+                      setPage(1); // Reset to first page when changing filter
+                    }}
+                    className="btn-secondary pr-8 appearance-none"
+                  >
+                    <option value="">All Accounts</option>
+                    {accounts.map(account => (
+                      <option key={account.id} value={account.id}>
+                        {account.email}
+                      </option>
+                    ))}
+                  </select>
+                  <Mail className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+
                 <button
                   onClick={() => setShowSearch(!showSearch)}
                   className={`btn-secondary ${showSearch ? 'bg-primary-50 border-primary-200 text-primary-700' : ''}`}

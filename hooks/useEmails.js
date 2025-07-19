@@ -3,10 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 
-export const useEmails = (categoryId, page = 1, limit = 20) => {
+export const useEmails = (categoryId, page = 1, limit = 20, accountId = null) => {
   return useQuery({
-    queryKey: ['emails', categoryId, page, limit],
-    queryFn: () => api.get(`/api/emails/category/${categoryId}?page=${page}&limit=${limit}`).then(res => res.data),
+    queryKey: ['emails', categoryId, page, limit, accountId],
+    queryFn: () => {
+      let url = `/api/emails/category/${categoryId}?page=${page}&limit=${limit}`;
+      if (accountId) {
+        url += `&accountId=${accountId}`;
+      }
+      return api.get(url).then(res => res.data);
+    },
     enabled: !!categoryId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
