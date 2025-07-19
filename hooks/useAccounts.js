@@ -15,7 +15,7 @@ export const useRemoveAccount = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (accountId) => api.delete(`/accounts/${accountId}`),
+    mutationFn: (accountId) => api.delete(`/api/accounts/${accountId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       toast.success('Account removed successfully');

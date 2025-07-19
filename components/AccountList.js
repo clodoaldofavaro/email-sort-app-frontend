@@ -57,7 +57,7 @@ export default function AccountList({ accounts, loading }) {
   const handleTestConnection = async (accountId, email) => {
     setTestingId(accountId);
     try {
-      const response = await api.post(`/accounts/${accountId}/test`);
+      const response = await api.post(`/api/accounts/${accountId}/test`);
       if (response.data.connected) {
         toast.success(`✅ ${email} is connected and working!`);
       } else {
