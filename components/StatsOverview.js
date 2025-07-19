@@ -17,24 +17,26 @@ const StatCard = ({ title, subtitle, value, icon: Icon, color, trend, loading, o
   <motion.div
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
-    className={`card p-6 ${onClick ? 'cursor-pointer hover:shadow-lg' : ''} transition-all duration-200`}
+    className={`card p-6 min-h-[120px] ${onClick ? 'cursor-pointer hover:shadow-lg' : ''} transition-all duration-200`}
     onClick={onClick}
   >
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between h-full">
       <div className="flex items-center space-x-4">
         <div className={`flex-shrink-0 p-3 rounded-lg ${color}`}>
           <Icon className="h-6 w-6 text-white" />
         </div>
-        <div>
-          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-          {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+        <div className="flex-1">
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium text-gray-600">{title}</p>
+            <p className="text-xs text-gray-400 h-4">{subtitle || '\u00A0'}</p>
+          </div>
           {loading ? (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 mt-2">
               <LoadingSpinner size="sm" />
               <span className="text-gray-400">Loading...</span>
             </div>
           ) : (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 mt-2">
               <p className="text-2xl font-bold text-gray-900">{value}</p>
               {trend && (
                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${
