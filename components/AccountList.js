@@ -26,7 +26,7 @@ export default function AccountList({ accounts, loading }) {
   const handleAddAccount = async () => {
     setConnecting(true);
     try {
-      const response = await api.get('/auth/google');
+      const response = await api.get('/api/auth/google');
       // Add prompt=consent to force account selection
       const url = new URL(response.data.url);
       url.searchParams.set('prompt', 'consent');
