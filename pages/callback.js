@@ -24,7 +24,7 @@ export default function Callback() {
       if (!code) return;
 
       try {
-        const response = await api.post('/auth/google/callback', { code });
+        const response = await api.post('/api/auth/google/callback', { code });
         const { token, user } = response.data;
         
         await login(token, user);

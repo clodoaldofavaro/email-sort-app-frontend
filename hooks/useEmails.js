@@ -24,7 +24,7 @@ export const useBulkDeleteEmails = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (emailIds) => api.delete('/emails/bulk', { data: { emailIds } }),
+          mutationFn: (emailIds) => api.delete('/api/emails/bulk', { data: { emailIds } }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['emails'] });
       toast.success(`${data.data.deletedCount} emails deleted successfully!`);
@@ -39,7 +39,7 @@ export const useBulkUnsubscribe = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (emailIds) => api.post('/emails/bulk/unsubscribe', { emailIds }),
+          mutationFn: (emailIds) => api.post('/api/emails/bulk/unsubscribe', { emailIds }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['emails'] });
       const { summary } = data.data;
@@ -54,7 +54,7 @@ export const useBulkUnsubscribe = () => {
 export const useEmailStats = () => {
   return useQuery({
     queryKey: ['email-stats'],
-    queryFn: () => api.get('/emails/stats/overview').then(res => res.data),
+    queryFn: () => api.get('/api/emails/stats/overview').then(res => res.data),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };

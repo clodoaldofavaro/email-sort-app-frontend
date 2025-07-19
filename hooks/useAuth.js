@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
         setUser(savedUser);
         // Verify token is still valid
         try {
-          const response = await api.get('/auth/me');
+          const response = await api.get('/api/auth/me');
           setUser(response.data.user);
           storage.setUser(response.data.user);
         } catch (error) {

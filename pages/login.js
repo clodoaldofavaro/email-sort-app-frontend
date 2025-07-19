@@ -40,7 +40,7 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/auth/google');
+      const response = await api.get('/api/auth/google');
       window.location.href = response.data.url;
     } catch (error) {
       toast.error('Failed to initiate Google login');

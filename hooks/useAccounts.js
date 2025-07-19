@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 export const useAccounts = () => {
   return useQuery({
     queryKey: ['accounts'],
-    queryFn: () => api.get('/accounts').then(res => res.data),
+    queryFn: () => api.get('/api/accounts').then(res => res.data),
     staleTime: 5 * 60 * 1000,
   });
 };

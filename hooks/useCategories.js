@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 export const useCategories = () => {
   return useQuery({
     queryKey: ['categories'],
-    queryFn: () => api.get('/categories').then(res => res.data),
+    queryFn: () => api.get('/api/categories').then(res => res.data),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
@@ -15,7 +15,7 @@ export const useCreateCategory = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (categoryData) => api.post('/categories', categoryData),
+          mutationFn: (categoryData) => api.post('/api/categories', categoryData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category created successfully!');

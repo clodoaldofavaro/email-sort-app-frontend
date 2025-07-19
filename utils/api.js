@@ -1,10 +1,10 @@
  // API client configuration with interceptors for authentication and error handling
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://email-sort-app-backend.fly.dev';
 
 const api = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: API_URL,
   withCredentials: true,
   timeout: 30000,
 });
