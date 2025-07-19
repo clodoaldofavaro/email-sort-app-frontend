@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
 
-const StatCard = ({ title, value, icon: Icon, color, trend, loading, onClick }) => (
+const StatCard = ({ title, subtitle, value, icon: Icon, color, trend, loading, onClick }) => (
   <motion.div
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
@@ -27,6 +27,7 @@ const StatCard = ({ title, value, icon: Icon, color, trend, loading, onClick }) 
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+          {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
           {loading ? (
             <div className="flex items-center space-x-2">
               <LoadingSpinner size="sm" />
@@ -95,7 +96,8 @@ export default function StatsOverview({ stats, loading, categories, onCreateCate
       trend: 15, // Example trend data
     },
     {
-      title: 'Categories Active',
+      title: 'Categories In Use',
+      subtitle: 'With emails',
       value: loading ? '...' : (stats?.overview?.categories_used?.toString() || '0'),
       icon: Users,
       color: 'bg-purple-500',
