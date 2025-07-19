@@ -28,7 +28,7 @@ export default function CategoryPage() {
   const totalCount = emailData?.pagination?.total || 0;
   const totalPages = emailData?.pagination?.totalPages || 1;
 
-  const category = categories?.find(cat => cat.id === id);
+  const category = categories?.find(cat => cat.id === parseInt(id));
 
   const handleSelectEmail = (emailId) => {
     setSelectedEmails(prev =>
@@ -103,7 +103,7 @@ export default function CategoryPage() {
           <div className="p-6">
             <div className="text-center py-12">
               <h1 className="text-2xl font-bold text-gray-900 mb-4">Category Not Found</h1>
-              <p className="text-gray-600 mb-6">The category you're looking for doesn't exist.</p>
+              <p className="text-gray-600 mb-6">The category you're looking for doesn't exist or has been deleted.</p>
               <button
                 onClick={() => router.push('/dashboard')}
                 className="btn-primary"
