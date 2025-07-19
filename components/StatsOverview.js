@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Mail, 
@@ -11,6 +12,8 @@ import {
   Clock,
   Target
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../utils/api';
 import LoadingSpinner from './LoadingSpinner';
 
 const StatCard = ({ title, subtitle, value, icon: Icon, color, trend, loading, onClick }) => (
@@ -57,31 +60,65 @@ const StatCard = ({ title, subtitle, value, icon: Icon, color, trend, loading, o
   </motion.div>
 );
 
-const QuickActionCard = ({ title, description, icon: Icon, color, onClick, disabled = false }) => (
+const QuickActionCard = ({ title, description, icon: Icon, color, onClick, disabled = false, loading = false }) => (
   <motion.button
     whileHover={!disabled ? { scale: 1.02 } : {}}
     whileTap={!disabled ? { scale: 0.98 } : {}}
     onClick={onClick}
-    disabled={disabled}
+    disabled={disabled || loading}
     className={`card p-4 text-left w-full transition-all duration-200 ${
-      disabled 
+      disabled || loading
         ? 'opacity-50 cursor-not-allowed' 
         : 'hover:shadow-md cursor-pointer'
     }`}
   >
     <div className="flex items-center space-x-3">
       <div className={`p-2 rounded-lg ${color}`}>
-        <Icon className="h-5 w-5 text-white" />
+        {loading ? (
+          <LoadingSpinner size="sm" className="text-white" />
+        ) : (
+          <Icon className="h-5 w-5 text-white" />
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <h3 className="font-medium text-gray-900 truncate">{title}</h3>
-        <p className="text-sm text-gray-600 truncate">{description}</p>
+        <p className="text-sm text-gray-600 truncate">
+          {loading ? 'Processing...' : description}
+        </p>
       </div>
     </div>
   </motion.button>
 );
 
 export default function StatsOverview({ stats, loading, categories, onCreateCategory }) {
+  const [processingEmails, setProcessingEmails] = useState(false);
+
+  const handleProcessEmails = async () => {
+    setProcessingEmails(true);
+    try {
+      const response = await api.post('/api/emails/process');
+      
+      // Show results
+      const successCount = response.data.accounts.filter(a => a.status === 'success').length;
+      const errorCount = response.data.accounts.filter(a => a.status === 'error').length;
+      
+      if (successCount > 0 && errorCount === 0) {
+        toast.success(`Email processing completed for ${successCount} account${successCount > 1 ? 's' : ''}`);
+      } else if (successCount > 0 && errorCount > 0) {
+        toast.success(`Processed ${successCount} account${successCount > 1 ? 's' : ''}, ${errorCount} failed`);
+      } else {
+        toast.error('Failed to process emails');
+      }
+      
+      // Optionally refresh stats
+      window.location.reload();
+    } catch (error) {
+      console.error('Email processing error:', error);
+      toast.error(error.response?.data?.error || 'Failed to process emails');
+    } finally {
+      setProcessingEmails(false);
+    }
+  };
   const statCards = [
     {
       title: 'Total Emails',
@@ -127,10 +164,9 @@ export default function StatsOverview({ stats, loading, categories, onCreateCate
       description: 'Manually trigger email processing',
       icon: RefreshCw,
       color: 'bg-blue-500',
-      onClick: () => {
-        // In a real app, this would trigger email processing
-        alert('Email processing would be triggered here');
-      },
+      onClick: handleProcessEmails,
+      disabled: processingEmails,
+      loading: processingEmails,
     },
     {
       title: 'View Analytics',
