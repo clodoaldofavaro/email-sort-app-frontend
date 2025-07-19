@@ -191,9 +191,9 @@ export default function StatsOverview({ stats, loading, categories, onCreateCate
                 </div>
               ))}
             </div>
-          ) : stats?.categories?.length > 0 ? (
+          ) : categories?.length > 0 ? (
             <div className="space-y-4">
-              {stats.categories.slice(0, 5).map((category, index) => {
+              {categories.slice(0, 5).map((category, index) => {
                 const percentage = stats.overview?.total_emails 
                   ? (category.email_count / stats.overview.total_emails) * 100 
                   : 0;
@@ -229,9 +229,9 @@ export default function StatsOverview({ stats, loading, categories, onCreateCate
                 );
               })}
               
-              {stats.categories.length > 5 && (
+              {categories.length > 5 && (
                 <div className="text-sm text-gray-500 text-center pt-2">
-                  +{stats.categories.length - 5} more categories
+                  +{categories.length - 5} more categories
                 </div>
               )}
             </div>
