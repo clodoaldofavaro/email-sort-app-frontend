@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { motion } from 'framer-motion';
 import DashboardLayout from '../components/Layout/DashboardLayout';
@@ -20,6 +21,7 @@ const tabs = [
 ];
 
 export default function Dashboard() {
+  const router = useRouter();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -27,6 +29,13 @@ export default function Dashboard() {
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { data: accounts = [], isLoading: accountsLoading } = useAccounts();
   const { data: stats, isLoading: statsLoading } = useEmailStats();
+
+  // Handle tab query parameter
+  useEffect(() => {
+    if (router.query.tab) {
+      setActiveTab(router.query.tab);
+    }
+  }, [router.query.tab]);
 
   return (
     <ProtectedRoute>

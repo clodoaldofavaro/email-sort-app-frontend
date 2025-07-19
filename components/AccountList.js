@@ -26,14 +26,11 @@ export default function AccountList({ accounts, loading }) {
   const handleAddAccount = async () => {
     setConnecting(true);
     try {
-      const response = await api.get('/api/auth/google');
-      // Add prompt=consent to force account selection
-      const url = new URL(response.data.url);
-      url.searchParams.set('prompt', 'consent');
-      url.searchParams.set('access_type', 'offline');
+      const response = await api.get('/api/auth/google/add-account');
+      const url = response.data.url;
       
       toast.success('Redirecting to Google...');
-      window.location.href = url.toString();
+      window.location.href = url;
     } catch (error) {
       console.error('Add account error:', error);
       toast.error('Failed to connect account');
