@@ -427,7 +427,7 @@ const SidebarContent = ({
             <div className="flex justify-between">
               <span className="text-gray-600">Total Emails:</span>
               <span className="font-medium">
-                {categories.reduce((sum, cat) => sum + (cat.email_count || 0), 0)}
+                {categories.reduce((sum, cat) => sum + Number(cat.email_count || 0), 0)}
               </span>
             </div>
           </div>
