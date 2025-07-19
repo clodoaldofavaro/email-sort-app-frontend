@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { Folder, ArrowRight, Edit2, Trash2, Mail, Plus } from 'lucide-react';
+import { Folder, ArrowRight, Edit2, Trash2, Mail } from 'lucide-react';
 import { useDeleteCategory } from '../hooks/useCategories';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -186,27 +186,6 @@ export default function CategoryList({ categories, loading }) {
         </motion.div>
       ))}
 
-      {/* Add category placeholder (optional) */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: categories.length * 0.1 }}
-        className="group"
-      >
-        <div className="card p-6 h-full border-2 border-dashed border-gray-200 hover:border-primary-300 transition-colors duration-200 cursor-pointer bg-gray-50 hover:bg-primary-50">
-          <div className="flex flex-col items-center justify-center h-full text-center py-8">
-            <div className="p-3 bg-gray-200 group-hover:bg-primary-100 rounded-full mb-4 transition-colors">
-              <Plus className="h-8 w-8 text-gray-400 group-hover:text-primary-600 transition-colors" />
-            </div>
-            <h3 className="font-medium text-gray-700 group-hover:text-primary-700 mb-2 transition-colors">
-              Add New Category
-            </h3>
-            <p className="text-sm text-gray-500 group-hover:text-primary-600 transition-colors">
-              Create a new email category with AI-powered sorting
-            </p>
-          </div>
-        </div>
-      </motion.div>
     </div>
   );
 }
