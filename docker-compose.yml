@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: email-sort-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    volumes:
+      - ./pages:/app/pages
+      - ./components:/app/components
+      - ./styles:/app/styles
+      - ./utils:/app/utils
+      - ./hooks:/app/hooks
+      - ./public:/app/public
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - email-sort-network
+    depends_on:
+      - backend
+
+networks:
+  email-sort-network:
+    external: true

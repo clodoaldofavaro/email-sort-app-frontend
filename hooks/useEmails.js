@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 export const useEmails = (categoryId, page = 1, limit = 20) => {
   return useQuery({
     queryKey: ['emails', categoryId, page, limit],
-    queryFn: () => api.get(`/emails/category/${categoryId}?page=${page}&limit=${limit}`).then(res => res.data),
+    queryFn: () => api.get(`/api/emails/category/${categoryId}?page=${page}&limit=${limit}`).then(res => res.data),
     enabled: !!categoryId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -15,7 +15,7 @@ export const useEmails = (categoryId, page = 1, limit = 20) => {
 export const useEmail = (emailId) => {
   return useQuery({
     queryKey: ['email', emailId],
-    queryFn: () => api.get(`/emails/${emailId}`).then(res => res.data),
+    queryFn: () => api.get(`/api/emails/${emailId}`).then(res => res.data),
     enabled: !!emailId,
   });
 };
