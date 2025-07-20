@@ -307,7 +307,7 @@ export default function DashboardLayout({ children }) {
         <footer className="bg-white border-t border-gray-200 py-4 px-6">
           <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
             <div className="mb-2 sm:mb-0">
-              © 2024 AI Email Sorter. Made with ❤️ for better email management.
+              © {new Date().getFullYear()} AI Email Sorter. Made with ❤️ for better email management.
             </div>
             <div className="flex space-x-4">
               <a href="#" className="hover:text-gray-700 transition-colors">Privacy</a>
