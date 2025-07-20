@@ -67,3 +67,18 @@ export const useEmailStats = () => {
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
+
+export const useEmailContent = (emailId) => {
+  return useQuery({
+    queryKey: ['email-content', emailId],
+    queryFn: () => api.get(`/api/emails/${emailId}/content`).then(res => res.data),
+    enabled: !!emailId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 30 * 60 * 1000, // 30 minutes
+    retry: (failureCount, error) => {
+      // Don't retry on 404 (email not found in Gmail)
+      if (error?.response?.status === 404) return false;
+      return failureCount < 2;
+    },
+  });
+};

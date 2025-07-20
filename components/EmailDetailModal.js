@@ -16,15 +16,22 @@ import {
   Bot,
   Eye,
   EyeOff,
-  Download
+  Download,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { useEmailContent } from '../hooks/useEmails';
+import LoadingSpinner from './LoadingSpinner';
 
 const EmailDetailModal = ({ email, onClose }) => {
   const [showRawContent, setShowRawContent] = useState(false);
   const [showFullHeaders, setShowFullHeaders] = useState(false);
   const [copied, setCopied] = useState(false);
+  
+  // Fetch email content on demand
+  const { data: emailContent, isLoading, isError, error, refetch } = useEmailContent(email?.id);
 
   // Close modal on escape key
   useEffect(() => {
@@ -58,7 +65,7 @@ AI Summary:
 ${email.ai_summary || 'No summary available'}
 
 Content:
-${email.body || 'No content available'}
+${emailContent?.content?.body || 'No content available'}
       `.trim();
 
       await navigator.clipboard.writeText(emailText);
@@ -78,7 +85,7 @@ ${email.body || 'No content available'}
       received_at: email.received_at,
       category: email.category_name,
       ai_summary: email.ai_summary,
-      body: email.body,
+      body: emailContent?.content?.body || 'Content not loaded',
       unsubscribe_link: email.unsubscribe_link
     };
 
@@ -110,8 +117,11 @@ ${email.body || 'No content available'}
     return match ? match[1] : sender;
   };
 
-  const formatEmailBody = (body) => {
+  const formatEmailBody = (body, isHtml = false) => {
     if (!body) return 'No content available';
+    
+    // If already HTML, return as is
+    if (isHtml) return body;
     
     // Convert plain text line breaks to HTML
     return body
@@ -281,39 +291,102 @@ ${email.body || 'No content available'}
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Email Content</h3>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setShowRawContent(!showRawContent)}
-                    className="btn-secondary text-sm"
-                  >
-                    {showRawContent ? (
-                      <>
-                        <EyeOff className="h-4 w-4 mr-2" />
-                        Formatted View
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Raw Content
-                      </>
-                    )}
-                  </button>
+                  {emailContent?.cached && (
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                      Cached
+                    </span>
+                  )}
+                  {isError && (
+                    <button
+                      onClick={() => refetch()}
+                      className="btn-secondary text-sm"
+                      title="Retry loading content"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Retry
+                    </button>
+                  )}
+                  {!isLoading && !isError && (
+                    <button
+                      onClick={() => setShowRawContent(!showRawContent)}
+                      className="btn-secondary text-sm"
+                    >
+                      {showRawContent ? (
+                        <>
+                          <EyeOff className="h-4 w-4 mr-2" />
+                          Formatted View
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Raw Content
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                {showRawContent ? (
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono overflow-x-auto">
-                    {email.body || 'No content available'}
-                  </pre>
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 min-h-[200px]">
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <LoadingSpinner size="lg" />
+                    <p className="text-gray-600 mt-3">Loading email content...</p>
+                  </div>
+                ) : isError ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <AlertCircle className="h-12 w-12 text-red-500 mb-3" />
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Failed to Load Content</h4>
+                    <p className="text-gray-600 mb-4 max-w-md">
+                      {error?.response?.data?.message || 'Unable to fetch email content. The email may have been deleted from Gmail.'}
+                    </p>
+                    <button
+                      onClick={() => refetch()}
+                      className="btn-primary"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Try Again
+                    </button>
+                  </div>
+                ) : emailContent?.content ? (
+                  showRawContent ? (
+                    <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono overflow-x-auto">
+                      {emailContent.content.body || 'No content available'}
+                    </pre>
+                  ) : (
+                    <div 
+                      className="prose max-w-none text-gray-700 leading-relaxed"
+                      dangerouslySetInnerHTML={{ 
+                        __html: formatEmailBody(emailContent.content.body, emailContent.content.isHtml) 
+                      }}
+                    />
+                  )
                 ) : (
-                  <div 
-                    className="prose max-w-none text-gray-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{ 
-                      __html: formatEmailBody(email.body) 
-                    }}
-                  />
+                  <p className="text-gray-500 text-center py-8">No content available</p>
                 )}
               </div>
+              
+              {/* Attachments */}
+              {emailContent?.content?.attachments?.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Attachments ({emailContent.content.attachments.length})</h4>
+                  <div className="space-y-2">
+                    {emailContent.content.attachments.map((attachment, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Download className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{attachment.filename}</p>
+                            <p className="text-xs text-gray-500">
+                              {attachment.mimeType} • {Math.round(attachment.size / 1024)} KB
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Email Metadata */}
