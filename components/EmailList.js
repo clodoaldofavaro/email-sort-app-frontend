@@ -13,7 +13,8 @@ import {
   ExternalLink,
   Zap,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw
 } from 'lucide-react';
 import EmailDetailModal from './EmailDetailModal';
 import LoadingSpinner from './LoadingSpinner';
@@ -97,9 +98,36 @@ const EmailItem = ({
                     {email.subject || 'No Subject'}
                   </h3>
                   {email.unsubscribe_link && (
-                    <div className="flex items-center space-x-1 bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0">
-                      <Zap className="h-3 w-3" />
-                      <span>Unsubscribe</span>
+                    <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                      email.unsubscribe_status === 'completed'
+                        ? 'bg-green-100 text-green-700'
+                        : email.unsubscribe_status === 'failed'
+                        ? 'bg-red-100 text-red-700'
+                        : email.unsubscribe_status === 'in_progress'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-orange-100 text-orange-700'
+                    }`}>
+                      {email.unsubscribe_status === 'completed' ? (
+                        <>
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span>Unsubscribed</span>
+                        </>
+                      ) : email.unsubscribe_status === 'failed' ? (
+                        <>
+                          <AlertCircle className="h-3 w-3" />
+                          <span>Failed</span>
+                        </>
+                      ) : email.unsubscribe_status === 'in_progress' ? (
+                        <>
+                          <RefreshCw className="h-3 w-3 animate-spin" />
+                          <span>Processing</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="h-3 w-3" />
+                          <span>Unsubscribe</span>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
