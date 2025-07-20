@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
+import toast from 'react-hot-toast';
 import DashboardLayout from '../../components/Layout/DashboardLayout';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import EmailList from '../../components/EmailList';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { ArrowLeft, Trash2, Zap, Search, Filter, RefreshCw, Mail } from 'lucide-react';
+import { ArrowLeft, Trash2, Zap, Search, Filter, RefreshCw, Mail, CheckCircle2 } from 'lucide-react';
 import { useEmails, useBulkDeleteEmails, useBulkUnsubscribe } from '../../hooks/useEmails';
 import { useCategories } from '../../hooks/useCategories';
 import { useAccounts } from '../../hooks/useAccounts';
@@ -20,10 +21,11 @@ export default function CategoryPage() {
   const [showSearch, setShowSearch] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [unsubscribeFilter, setUnsubscribeFilter] = useState(null);
+  const [unsubscribeStatusFilter, setUnsubscribeStatusFilter] = useState(null);
 
   const { data: categories } = useCategories();
   const { data: accounts = [] } = useAccounts();
-  const { data: emailData, isLoading, refetch } = useEmails(id, page, 20, selectedAccountId, unsubscribeFilter);
+  const { data: emailData, isLoading, refetch } = useEmails(id, page, 20, selectedAccountId, unsubscribeFilter, unsubscribeStatusFilter);
   const bulkDelete = useBulkDeleteEmails();
   const bulkUnsubscribe = useBulkUnsubscribe();
   
@@ -50,6 +52,14 @@ export default function CategoryPage() {
     }
   };
 
+  // Filter emails that can be unsubscribed (have link and not already completed)
+  const getUnsubscribableEmails = (emailIds) => {
+    return emailIds.filter(id => {
+      const email = emails.find(e => e.id === id);
+      return email && email.unsubscribe_link && email.unsubscribe_status !== 'completed';
+    });
+  };
+
   const handleDeleteSelected = async () => {
     if (selectedEmails.length === 0) return;
     if (!confirm(`Delete ${selectedEmails.length} selected emails?`)) return;
@@ -64,10 +74,24 @@ export default function CategoryPage() {
 
   const handleUnsubscribeSelected = async () => {
     if (selectedEmails.length === 0) return;
-    if (!confirm(`Attempt to unsubscribe from ${selectedEmails.length} selected emails? This will try to automatically unsubscribe you from these senders.`)) return;
+    
+    // Filter out already unsubscribed emails
+    const unsubscribableEmails = getUnsubscribableEmails(selectedEmails);
+    
+    if (unsubscribableEmails.length === 0) {
+      toast.info('All selected emails are already unsubscribed or cannot be unsubscribed');
+      return;
+    }
+    
+    const alreadyUnsubscribed = selectedEmails.length - unsubscribableEmails.length;
+    const confirmMessage = alreadyUnsubscribed > 0
+      ? `${alreadyUnsubscribed} email(s) are already unsubscribed. Attempt to unsubscribe from ${unsubscribableEmails.length} remaining email(s)?`
+      : `Attempt to unsubscribe from ${unsubscribableEmails.length} selected email(s)? This will try to automatically unsubscribe you from these senders.`;
+    
+    if (!confirm(confirmMessage)) return;
     
     try {
-      await bulkUnsubscribe.mutateAsync(selectedEmails);
+      await bulkUnsubscribe.mutateAsync(unsubscribableEmails);
       setSelectedEmails([]);
     } catch (error) {
       // Error handled by mutation
@@ -167,6 +191,20 @@ export default function CategoryPage() {
                         {unsubscribeFilter ? 'With Unsubscribe' : 'Without Unsubscribe'}
                       </span>
                     )}
+                    {unsubscribeStatusFilter && (
+                      <span className={`text-sm px-2 py-1 rounded-md ${
+                        unsubscribeStatusFilter === 'completed' ? 'text-green-600 bg-green-50' :
+                        unsubscribeStatusFilter === 'failed' ? 'text-red-600 bg-red-50' :
+                        unsubscribeStatusFilter === 'in_progress' ? 'text-blue-600 bg-blue-50' :
+                        'text-gray-600 bg-gray-100'
+                      }`}>
+                        <CheckCircle2 className="inline h-3 w-3 mr-1" />
+                        {unsubscribeStatusFilter === 'none' ? 'Not Attempted' :
+                         unsubscribeStatusFilter === 'completed' ? 'Unsubscribed' :
+                         unsubscribeStatusFilter === 'failed' ? 'Failed' :
+                         unsubscribeStatusFilter === 'in_progress' ? 'In Progress' : ''}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 mt-2">
@@ -212,6 +250,25 @@ export default function CategoryPage() {
                     <option value="false">Without Unsubscribe</option>
                   </select>
                   <Zap className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+
+                {/* Unsubscribe status filter dropdown */}
+                <div className="relative">
+                  <select
+                    value={unsubscribeStatusFilter || ''}
+                    onChange={(e) => {
+                      setUnsubscribeStatusFilter(e.target.value || null);
+                      setPage(1); // Reset to first page when changing filter
+                    }}
+                    className="btn-secondary pr-8 appearance-none"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="none">Not Attempted</option>
+                    <option value="completed">Unsubscribed</option>
+                    <option value="failed">Failed</option>
+                    <option value="in_progress">In Progress</option>
+                  </select>
+                  <CheckCircle2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
 
                 <button
