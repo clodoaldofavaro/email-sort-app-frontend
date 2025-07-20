@@ -97,7 +97,10 @@ const EmailItem = ({
                     {email.subject || 'No Subject'}
                   </h3>
                   {email.unsubscribe_link && (
-                    <Zap className="h-3 w-3 text-orange-500 flex-shrink-0" title="Unsubscribe available" />
+                    <div className="flex items-center space-x-1 bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0">
+                      <Zap className="h-3 w-3" />
+                      <span>Unsubscribe</span>
+                    </div>
                   )}
                 </div>
                 

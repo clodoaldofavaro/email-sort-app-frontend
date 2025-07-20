@@ -19,10 +19,11 @@ export default function CategoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [unsubscribeFilter, setUnsubscribeFilter] = useState(null);
 
   const { data: categories } = useCategories();
   const { data: accounts = [] } = useAccounts();
-  const { data: emailData, isLoading, refetch } = useEmails(id, page, 20, selectedAccountId);
+  const { data: emailData, isLoading, refetch } = useEmails(id, page, 20, selectedAccountId, unsubscribeFilter);
   const bulkDelete = useBulkDeleteEmails();
   const bulkUnsubscribe = useBulkUnsubscribe();
   
@@ -153,11 +154,20 @@ export default function CategoryPage() {
                   <p className="text-gray-600">
                     {totalCount} emails
                   </p>
-                  {selectedAccountId && (
-                    <span className="text-sm text-primary-600 bg-primary-50 px-2 py-1 rounded-md">
-                      Filtered by: {accounts.find(a => a.id === parseInt(selectedAccountId))?.email}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {selectedAccountId && (
+                      <span className="text-sm text-primary-600 bg-primary-50 px-2 py-1 rounded-md">
+                        <Mail className="inline h-3 w-3 mr-1" />
+                        {accounts.find(a => a.id === parseInt(selectedAccountId))?.email}
+                      </span>
+                    )}
+                    {unsubscribeFilter !== null && (
+                      <span className="text-sm text-orange-600 bg-orange-50 px-2 py-1 rounded-md">
+                        <Zap className="inline h-3 w-3 mr-1" />
+                        {unsubscribeFilter ? 'With Unsubscribe' : 'Without Unsubscribe'}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm text-gray-500 mt-2">
                   {category.description}
@@ -184,6 +194,24 @@ export default function CategoryPage() {
                     ))}
                   </select>
                   <Mail className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+
+                {/* Unsubscribe filter dropdown */}
+                <div className="relative">
+                  <select
+                    value={unsubscribeFilter === null ? '' : unsubscribeFilter.toString()}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setUnsubscribeFilter(value === '' ? null : value === 'true');
+                      setPage(1); // Reset to first page when changing filter
+                    }}
+                    className="btn-secondary pr-8 appearance-none"
+                  >
+                    <option value="">All Emails</option>
+                    <option value="true">With Unsubscribe</option>
+                    <option value="false">Without Unsubscribe</option>
+                  </select>
+                  <Zap className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
 
                 <button
