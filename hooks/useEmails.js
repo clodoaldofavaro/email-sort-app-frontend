@@ -48,10 +48,10 @@ export const useBulkUnsubscribe = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-          mutationFn: (emailIds) => api.post('/api/emails/bulk/unsubscribe', { emailIds }),
+          mutationFn: (emailIds) => api.post('/api/unsubscribe/batch', { emailIds }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['emails'] });
-      const { summary } = data.data;
+      const { summary } = data;
       toast.success(`Unsubscribed from ${summary.successful}/${summary.total} emails`);
     },
     onError: (error) => {
