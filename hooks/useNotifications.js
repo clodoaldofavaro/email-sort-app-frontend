@@ -103,11 +103,19 @@ export function useNotifications() {
       auth: {
         token
       },
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     newSocket.on('connect', () => {
       console.log('Connected to notification server');
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.debug('Socket connection error:', error.message);
+      // Don't show errors to user, just log for debugging
     });
 
     newSocket.on('notification', (notification) => {
@@ -134,10 +142,16 @@ export function useNotifications() {
       // Play notification sound if available
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
-          new Notification(notification.title, {
-            body: notification.message,
-            icon: '/icon-192x192.png'
-          });
+          try {
+            new Notification(notification.title, {
+              body: notification.message,
+              // Only include icon if it exists
+              ...(window.location.hostname !== 'localhost' ? {} : { icon: '/favicon.ico' })
+            });
+          } catch (err) {
+            // Silently ignore notification errors (e.g., missing icon)
+            console.debug('Browser notification failed:', err);
+          }
         }
       }
     });
