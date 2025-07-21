@@ -276,7 +276,7 @@ export default function DashboardLayout({ children }) {
       </AnimatePresence>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
+      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 z-50">
         <SidebarContent
           navigation={navigation}
           categories={categories}

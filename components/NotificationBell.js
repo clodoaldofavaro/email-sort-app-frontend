@@ -47,7 +47,7 @@ export default function NotificationBell() {
   };
 
   return (
-    <div className="relative z-50">
+    <div className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
