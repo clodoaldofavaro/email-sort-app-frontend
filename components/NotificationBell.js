@@ -6,7 +6,13 @@ import { useNotifications } from '../hooks/useNotifications';
 
 export default function NotificationBell() {
   const [showDropdown, setShowDropdown] = useState(false);
-  const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading, error } = useNotifications();
+
+  // Don't render if there's an auth error
+  if (error && error.message === 'Authentication failed') {
+    console.error('NotificationBell: Authentication error');
+    return null;
+  }
 
   const handleNotificationClick = async (notification) => {
     if (!notification.read) {
