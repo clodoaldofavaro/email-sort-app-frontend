@@ -122,12 +122,12 @@ const EmailItem = ({
                           <RefreshCw className="h-3 w-3 animate-spin" />
                           <span>Processing</span>
                         </>
-                      ) : (
+                      ) : email.unsubscribe_status === 'pending' || !email.unsubscribe_status ? (
                         <>
                           <Zap className="h-3 w-3" />
                           <span>Unsubscribe</span>
                         </>
-                      )}
+                      ) : null}
                     </div>
                   )}
                 </div>

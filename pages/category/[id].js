@@ -52,11 +52,12 @@ export default function CategoryPage() {
     }
   };
 
-  // Filter emails that can be unsubscribed (have link and not already completed)
+  // Filter emails that can be unsubscribed (have link and not already completed or in progress)
   const getUnsubscribableEmails = (emailIds) => {
     return emailIds.filter(id => {
       const email = emails.find(e => e.id === id);
-      return email && email.unsubscribe_link && email.unsubscribe_status !== 'completed';
+      return email && email.unsubscribe_link && 
+             (!email.unsubscribe_status || email.unsubscribe_status === 'pending' || email.unsubscribe_status === 'failed');
     });
   };
 
@@ -199,7 +200,7 @@ export default function CategoryPage() {
                         'text-gray-600 bg-gray-100'
                       }`}>
                         <CheckCircle2 className="inline h-3 w-3 mr-1" />
-                        {unsubscribeStatusFilter === 'none' ? 'Not Attempted' :
+                        {unsubscribeStatusFilter === 'pending' ? 'Not Attempted' :
                          unsubscribeStatusFilter === 'completed' ? 'Unsubscribed' :
                          unsubscribeStatusFilter === 'failed' ? 'Failed' :
                          unsubscribeStatusFilter === 'in_progress' ? 'In Progress' : ''}
@@ -263,7 +264,7 @@ export default function CategoryPage() {
                     className="btn-secondary pr-8 appearance-none"
                   >
                     <option value="">All Statuses</option>
-                    <option value="none">Not Attempted</option>
+                    <option value="pending">Not Attempted</option>
                     <option value="completed">Unsubscribed</option>
                     <option value="failed">Failed</option>
                     <option value="in_progress">In Progress</option>
