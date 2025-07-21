@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useCategories } from '../../hooks/useCategories';
+import NotificationBell from '../NotificationBell';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -280,9 +281,7 @@ export default function DashboardLayout({ children }) {
               <button className="p-2 text-gray-400 hover:text-gray-600 rounded-md">
                 <Search className="h-5 w-5" />
               </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-md">
-                <Bell className="h-5 w-5" />
-              </button>
+              <NotificationBell />
               {user?.picture ? (
                 <img
                   className="h-8 w-8 rounded-full"
@@ -343,14 +342,17 @@ const SidebarContent = ({
           <Mail className="h-8 w-8 text-primary-600" />
           <span className="text-xl font-bold text-gray-900">AI Email Sorter</span>
         </div>
-        {showCloseButton && (
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        )}
+        <div className="flex items-center space-x-2">
+          {!showCloseButton && <NotificationBell />}
+          {showCloseButton && (
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          )}
+        </div>
       </div>
       
       {/* Navigation */}

@@ -101,11 +101,34 @@ export default function CategoryPage() {
 
   const handleConfirmUnsubscribe = async () => {
     try {
-      await bulkUnsubscribe.mutateAsync(unsubscribeModalData.emailIds);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/unsubscribe/async/batch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ emailIds: unsubscribeModalData.emailIds })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start unsubscribe process');
+      }
+
+      const data = await response.json();
+      
+      toast.success(`Unsubscribe process started! We'll notify you when it's complete. Job ID: ${data.jobId}`, {
+        duration: 5000,
+        icon: '🚀'
+      });
+      
       setSelectedEmails([]);
       setShowUnsubscribeModal(false);
+      
+      // Refresh the email list to show "in_progress" status
+      refetch();
     } catch (error) {
-      // Error handled by mutation
+      toast.error('Failed to start unsubscribe process');
+      console.error('Unsubscribe error:', error);
     }
   };
 
