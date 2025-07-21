@@ -23,25 +23,54 @@ import NotificationBell from '../NotificationBell';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Analytics', icon: BarChart3, comingSoon: true },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 const NavigationItem = ({ item, isActive, onClick }) => {
   const Icon = item.icon;
   
-  return (
-    <Link
-      href={item.href}
-      className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+  const handleClick = (e) => {
+    if (item.comingSoon) {
+      e.preventDefault();
+      return;
+    }
+    if (onClick) onClick();
+  };
+  
+  const content = (
+    <div
+      className={`flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
         isActive
           ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600'
+          : item.comingSoon
+          ? 'text-gray-400 cursor-not-allowed'
           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
       }`}
-      onClick={onClick}
     >
-      <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
-      {item.name}
+      <div className="flex items-center">
+        <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
+        {item.name}
+      </div>
+      {item.comingSoon && (
+        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+          Coming Soon
+        </span>
+      )}
+    </div>
+  );
+  
+  if (item.comingSoon) {
+    return (
+      <div onClick={handleClick}>
+        {content}
+      </div>
+    );
+  }
+  
+  return (
+    <Link href={item.href} onClick={handleClick}>
+      {content}
     </Link>
   );
 };
@@ -175,6 +204,7 @@ export default function DashboardLayout({ children }) {
   const { data: categories = [] } = useCategories();
 
   const isActive = (href) => {
+    if (!href) return false;
     if (href === '/dashboard') {
       return router.pathname === '/dashboard';
     }
