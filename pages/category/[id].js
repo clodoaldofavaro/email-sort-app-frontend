@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
@@ -31,6 +31,19 @@ export default function CategoryPage() {
   const { data: categories } = useCategories();
   const { data: accounts = [] } = useAccounts();
   const { data: emailData, isLoading, refetch } = useEmails(id, page, 20, selectedAccountId, unsubscribeFilter, unsubscribeStatusFilter);
+  
+  // Poll for updates when there are emails in progress
+  useEffect(() => {
+    const hasInProgressEmails = emails.some(email => email.unsubscribe_status === 'in_progress');
+    
+    if (hasInProgressEmails) {
+      const interval = setInterval(() => {
+        refetch();
+      }, 5000); // Poll every 5 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [emails, refetch]);
   const bulkDelete = useBulkDeleteEmails();
   const bulkUnsubscribe = useBulkUnsubscribe();
   const bulkMove = useBulkMoveEmails();

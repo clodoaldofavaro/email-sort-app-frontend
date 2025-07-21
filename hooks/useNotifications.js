@@ -128,12 +128,18 @@ export function useNotifications() {
       switch (notification.type) {
         case 'unsubscribe_complete':
           toast.success(notification.message, { ...toastOptions, icon: '✅' });
+          // Refresh email lists to show updated status
+          queryClient.invalidateQueries({ queryKey: ['emails'] });
           break;
         case 'unsubscribe_failed':
           toast.error(notification.message, { ...toastOptions, icon: '❌' });
+          // Refresh email lists to show updated status
+          queryClient.invalidateQueries({ queryKey: ['emails'] });
           break;
         case 'unsubscribe_partial':
           toast(notification.message, { ...toastOptions, icon: '⚠️' });
+          // Refresh email lists to show updated status
+          queryClient.invalidateQueries({ queryKey: ['emails'] });
           break;
         default:
           toast(notification.message, toastOptions);
