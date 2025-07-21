@@ -8,10 +8,11 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import EmailList from '../../components/EmailList';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import { ArrowLeft, Trash2, Zap, Search, RefreshCw, Mail, CheckCircle2 } from 'lucide-react';
-import { useEmails, useBulkDeleteEmails, useBulkUnsubscribe } from '../../hooks/useEmails';
+import { ArrowLeft, Trash2, Zap, Search, RefreshCw, Mail, CheckCircle2, FolderOpen } from 'lucide-react';
+import { useEmails, useBulkDeleteEmails, useBulkUnsubscribe, useBulkMoveEmails } from '../../hooks/useEmails';
 import { useCategories } from '../../hooks/useCategories';
 import { useAccounts } from '../../hooks/useAccounts';
+import CategorySelectionModal from '../../components/CategorySelectionModal';
 
 export default function CategoryPage() {
   const router = useRouter();
@@ -25,12 +26,14 @@ export default function CategoryPage() {
   const [unsubscribeStatusFilter, setUnsubscribeStatusFilter] = useState(null);
   const [showUnsubscribeModal, setShowUnsubscribeModal] = useState(false);
   const [unsubscribeModalData, setUnsubscribeModalData] = useState({ count: 0, alreadyUnsubscribed: 0 });
+  const [showMoveModal, setShowMoveModal] = useState(false);
 
   const { data: categories } = useCategories();
   const { data: accounts = [] } = useAccounts();
   const { data: emailData, isLoading, refetch } = useEmails(id, page, 20, selectedAccountId, unsubscribeFilter, unsubscribeStatusFilter);
   const bulkDelete = useBulkDeleteEmails();
   const bulkUnsubscribe = useBulkUnsubscribe();
+  const bulkMove = useBulkMoveEmails();
   
   // Extract emails and pagination from the response
   const emails = emailData?.emails || [];
@@ -108,6 +111,24 @@ export default function CategoryPage() {
 
   const handleRefresh = () => {
     refetch();
+  };
+
+  const handleMoveSelected = () => {
+    if (selectedEmails.length === 0) return;
+    setShowMoveModal(true);
+  };
+
+  const handleConfirmMove = async (toCategoryId) => {
+    try {
+      await bulkMove.mutateAsync({ 
+        emailIds: selectedEmails, 
+        toCategoryId 
+      });
+      setSelectedEmails([]);
+      setShowMoveModal(false);
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
   const filteredEmails = emails.filter(email => {
@@ -362,6 +383,19 @@ export default function CategoryPage() {
                     </button>
                     
                     <button
+                      onClick={handleMoveSelected}
+                      disabled={bulkMove.isLoading}
+                      className="btn-secondary text-purple-600 hover:bg-purple-50 border-purple-200"
+                    >
+                      {bulkMove.isLoading ? (
+                        <LoadingSpinner size="sm" className="mr-2" />
+                      ) : (
+                        <FolderOpen className="h-4 w-4 mr-2" />
+                      )}
+                      Move to Category
+                    </button>
+                    
+                    <button
                       onClick={() => setSelectedEmails([])}
                       className="btn-secondary"
                     >
@@ -424,6 +458,17 @@ export default function CategoryPage() {
           cancelText="Cancel"
           type="warning"
           confirmLoading={bulkUnsubscribe.isLoading}
+        />
+
+        {/* Category Selection Modal */}
+        <CategorySelectionModal
+          isOpen={showMoveModal}
+          onClose={() => setShowMoveModal(false)}
+          onConfirm={handleConfirmMove}
+          categories={categories || []}
+          currentCategoryId={parseInt(id)}
+          emailCount={selectedEmails.length}
+          isLoading={bulkMove.isLoading}
         />
       </DashboardLayout>
     </ProtectedRoute>

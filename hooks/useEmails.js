@@ -63,6 +63,23 @@ export const useBulkUnsubscribe = () => {
   });
 };
 
+export const useBulkMoveEmails = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ emailIds, toCategoryId }) => 
+      api.put('/api/emails/bulk/move', { emailIds, toCategoryId }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['emails'] });
+      queryClient.invalidateQueries({ queryKey: ['email-stats'] });
+      toast.success(data.data.message);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to move emails');
+    },
+  });
+};
+
 export const useEmailStats = () => {
   return useQuery({
     queryKey: ['email-stats'],
