@@ -31,19 +31,6 @@ export default function CategoryPage() {
   const { data: categories } = useCategories();
   const { data: accounts = [] } = useAccounts();
   const { data: emailData, isLoading, refetch } = useEmails(id, page, 20, selectedAccountId, unsubscribeFilter, unsubscribeStatusFilter);
-  
-  // Poll for updates when there are emails in progress
-  useEffect(() => {
-    const hasInProgressEmails = emails.some(email => email.unsubscribe_status === 'in_progress');
-    
-    if (hasInProgressEmails) {
-      const interval = setInterval(() => {
-        refetch();
-      }, 5000); // Poll every 5 seconds
-      
-      return () => clearInterval(interval);
-    }
-  }, [emails, refetch]);
   const bulkDelete = useBulkDeleteEmails();
   const bulkUnsubscribe = useBulkUnsubscribe();
   const bulkMove = useBulkMoveEmails();
@@ -54,6 +41,21 @@ export default function CategoryPage() {
   const totalPages = emailData?.pagination?.totalPages || 1;
 
   const category = categories?.find(cat => cat.id === parseInt(id));
+
+  // Poll for updates when there are emails in progress
+  useEffect(() => {
+    if (!emails || emails.length === 0) return;
+    
+    const hasInProgressEmails = emails.some(email => email.unsubscribe_status === 'in_progress');
+    
+    if (hasInProgressEmails) {
+      const interval = setInterval(() => {
+        refetch();
+      }, 5000); // Poll every 5 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [emails, refetch]);
 
   const handleSelectEmail = (emailId) => {
     setSelectedEmails(prev =>
