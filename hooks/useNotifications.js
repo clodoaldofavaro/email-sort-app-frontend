@@ -13,7 +13,7 @@ export function useNotifications() {
   const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         throw new Error('No authentication token found');
       }
@@ -36,14 +36,14 @@ export function useNotifications() {
       return response.json();
     },
     refetchInterval: 30000, // Refetch every 30 seconds
-    enabled: !!localStorage.getItem('token'), // Only run query if token exists
+    enabled: !!localStorage.getItem('authToken'), // Only run query if token exists
     retry: false // Don't retry on auth errors
   });
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId) => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         throw new Error('No authentication token found');
       }
@@ -70,7 +70,7 @@ export function useNotifications() {
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         throw new Error('No authentication token found');
       }
@@ -96,7 +96,7 @@ export function useNotifications() {
 
   // Set up WebSocket connection
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
     if (!token) return;
 
     const newSocket = io(API_URL, {
