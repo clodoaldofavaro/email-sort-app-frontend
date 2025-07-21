@@ -7,7 +7,8 @@ import DashboardLayout from '../../components/Layout/DashboardLayout';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import EmailList from '../../components/EmailList';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { ArrowLeft, Trash2, Zap, Search, Filter, RefreshCw, Mail, CheckCircle2 } from 'lucide-react';
+import ConfirmationModal from '../../components/ConfirmationModal';
+import { ArrowLeft, Trash2, Zap, Search, RefreshCw, Mail, CheckCircle2 } from 'lucide-react';
 import { useEmails, useBulkDeleteEmails, useBulkUnsubscribe } from '../../hooks/useEmails';
 import { useCategories } from '../../hooks/useCategories';
 import { useAccounts } from '../../hooks/useAccounts';
@@ -22,6 +23,8 @@ export default function CategoryPage() {
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [unsubscribeFilter, setUnsubscribeFilter] = useState(null);
   const [unsubscribeStatusFilter, setUnsubscribeStatusFilter] = useState(null);
+  const [showUnsubscribeModal, setShowUnsubscribeModal] = useState(false);
+  const [unsubscribeModalData, setUnsubscribeModalData] = useState({ count: 0, alreadyUnsubscribed: 0 });
 
   const { data: categories } = useCategories();
   const { data: accounts = [] } = useAccounts();
@@ -85,15 +88,19 @@ export default function CategoryPage() {
     }
     
     const alreadyUnsubscribed = selectedEmails.length - unsubscribableEmails.length;
-    const confirmMessage = alreadyUnsubscribed > 0
-      ? `${alreadyUnsubscribed} email(s) are already unsubscribed. Attempt to unsubscribe from ${unsubscribableEmails.length} remaining email(s)?`
-      : `Attempt to unsubscribe from ${unsubscribableEmails.length} selected email(s)? This will try to automatically unsubscribe you from these senders.`;
-    
-    if (!confirm(confirmMessage)) return;
-    
+    setUnsubscribeModalData({ 
+      count: unsubscribableEmails.length, 
+      alreadyUnsubscribed,
+      emailIds: unsubscribableEmails 
+    });
+    setShowUnsubscribeModal(true);
+  };
+
+  const handleConfirmUnsubscribe = async () => {
     try {
-      await bulkUnsubscribe.mutateAsync(unsubscribableEmails);
+      await bulkUnsubscribe.mutateAsync(unsubscribeModalData.emailIds);
       setSelectedEmails([]);
+      setShowUnsubscribeModal(false);
     } catch (error) {
       // Error handled by mutation
     }
@@ -402,6 +409,22 @@ export default function CategoryPage() {
             </motion.div>
           )}
         </div>
+
+        {/* Unsubscribe Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showUnsubscribeModal}
+          onClose={() => setShowUnsubscribeModal(false)}
+          onConfirm={handleConfirmUnsubscribe}
+          title="Confirm Unsubscribe"
+          message={unsubscribeModalData.alreadyUnsubscribed > 0
+            ? `${unsubscribeModalData.alreadyUnsubscribed} email(s) are already unsubscribed.\n\nAttempt to unsubscribe from ${unsubscribeModalData.count} remaining email(s)?\n\nThis will try to automatically unsubscribe you from these senders.`
+            : `Attempt to unsubscribe from ${unsubscribeModalData.count} selected email(s)?\n\nThis will try to automatically unsubscribe you from these senders.`
+          }
+          confirmText="Unsubscribe"
+          cancelText="Cancel"
+          type="warning"
+          confirmLoading={bulkUnsubscribe.isLoading}
+        />
       </DashboardLayout>
     </ProtectedRoute>
   );
