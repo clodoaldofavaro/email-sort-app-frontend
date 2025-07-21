@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
@@ -10,9 +10,9 @@ export function useNotifications() {
   const queryClient = useQueryClient();
 
   // Fetch notifications
-  const { data: notifications = [], isLoading, error } = useQuery(
-    'notifications',
-    async () => {
+  const { data: notifications = [], isLoading, error } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
       const response = await fetch(`${API_URL}/api/notifications`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -25,14 +25,12 @@ export function useNotifications() {
       
       return response.json();
     },
-    {
-      refetchInterval: 30000, // Refetch every 30 seconds
-    }
-  );
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
 
   // Mark as read mutation
-  const markAsReadMutation = useMutation(
-    async (notificationId) => {
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId) => {
       const response = await fetch(`${API_URL}/api/notifications/${notificationId}/read`, {
         method: 'PUT',
         headers: {
@@ -46,16 +44,14 @@ export function useNotifications() {
       
       return response.json();
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('notifications');
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     }
-  );
+  });
 
   // Mark all as read mutation
-  const markAllAsReadMutation = useMutation(
-    async () => {
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
       const response = await fetch(`${API_URL}/api/notifications/read-all`, {
         method: 'PUT',
         headers: {
@@ -69,12 +65,10 @@ export function useNotifications() {
       
       return response.json();
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('notifications');
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     }
-  );
+  });
 
   // Set up WebSocket connection
   useEffect(() => {
